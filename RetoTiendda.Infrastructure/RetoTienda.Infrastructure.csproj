@@ -11,7 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\RetoTiendda.Domain\RetoTiendda.Domain.csproj" />
+    <ProjectReference Include="..\RetoTiendda.Domain\RetoTienda.Domain.csproj" />
   </ItemGroup>
 
 </Project>

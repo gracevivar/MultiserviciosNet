@@ -1,6 +1,6 @@
 <Solution>
   <Project Path="RetoTienda.Api/RetoTienda.Api.csproj" Id="97ea850e-e9ff-41ad-aec9-041bd513b95e" />
-  <Project Path="RetoTiendda.Application/RetoTiendda.Application.csproj" />
-  <Project Path="RetoTiendda.Domain/RetoTiendda.Domain.csproj" />
-  <Project Path="RetoTiendda.Infrastructure/RetoTiendda.Infrastructure.csproj" />
+  <Project Path="RetoTiendda.Application/RetoTienda.Application.csproj" />
+  <Project Path="RetoTiendda.Domain/RetoTienda.Domain.csproj" />
+  <Project Path="RetoTiendda.Infrastructure/RetoTienda.Infrastructure.csproj" />
 </Solution>
