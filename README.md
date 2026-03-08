@@ -115,3 +115,65 @@ Notas / Trade-offs
 Persistencia in-memory para mantener el alcance mínimo (los datos se pierden al reiniciar).
 
 No se incluye autenticación, UI ni patrones avanzados (fuera del alcance del reto).
+******************************************************************************************************************
+******************************************************************************************************************
+*******************************************RETO  3*****************************************************************
+*****************************************************************************************************************
+********************************************************************************************************************
+
+---
+
+## Contenerización (Docker) y Orquestación (Kubernetes)
+
+### Decisiones arquitectónicas
+
+1. **Dockerfile multi-stage**
+   - Se utilizó un Dockerfile multi-stage (SDK para build / ASP.NET runtime para ejecución) para reducir el tamaño final de la imagen y separar build de runtime.
+   - La API se expone en el puerto **8080** dentro del contenedor mediante `ASPNETCORE_URLS=http://+:8080`.
+
+2. **docker-compose con 2 servicios**
+   - Se definieron **dos servicios** en `docker-compose.yml`:
+     - `ordenes-api`: servicio principal (API)
+     - `ordenes-api-peer`: segunda instancia del mismo servicio para cumplir el requisito de 2 contenedores y demostrar comunicación interna.
+   - Se agregó un endpoint interno `GET /internal/ping-peer` que realiza una llamada HTTP desde `ordenes-api` hacia `ordenes-api-peer` usando el DNS interno de Docker Compose (`http://ordenes-api-peer:8080/health`), evidenciando comunicación contenedor → contenedor.
+
+3. **Kubernetes (Deployment + Service NodePort)**
+   - Se creó un `Deployment` para administrar el ciclo de vida de los Pods y habilitar el escalado.
+   - Se expone el servicio mediante `Service` tipo **NodePort** (por simplicidad en entorno local), usando el puerto **30080** para acceder desde el host.
+   - Se configuraron **readinessProbe** y **livenessProbe** apuntando al endpoint `GET /health` para soportar:
+     - detección de disponibilidad (readiness)
+     - self-healing ante fallos (liveness)
+
+4. **Escalado y self-healing**
+   - Se escala el deployment a **3 réplicas** para evidenciar alta disponibilidad.
+   - Se elimina manualmente un Pod para demostrar que Kubernetes recrea el Pod automáticamente (self-healing) manteniendo el “desired state” del deployment.
+
+---
+
+### Trade-offs asumidos
+
+1. **Sin persistencia real (in-memory)**
+   - La persistencia es in-memory, por lo que la información se pierde al reiniciar contenedores o Pods.
+   - Se decidió así para mantener el alcance mínimo y enfocarse en contenerización/orquestación.
+
+2. **NodePort en lugar de Ingress/LoadBalancer**
+   - Se utiliza NodePort por simplicidad en Kubernetes local.
+   - Trade-off: No es el patrón ideal en producción; normalmente se usaría Ingress + Controller o LoadBalancer según el entorno.
+
+3. **Dos servicios idénticos en docker-compose**
+   - Se usan dos instancias del mismo servicio para cumplir el requisito de “dos servicios” y demostrar comunicación.
+   - Trade-off: En un escenario real, el segundo servicio normalmente sería un servicio distinto (ej. catálogo, pagos, etc.), pero el reto no exige microservicios completos.
+
+4. **Sin configuración avanzada de observabilidad**
+   - No se incluyeron logs centralizados, métricas o tracing distribuido por alcance del reto.
+   - Se priorizó demostrar despliegue, escalado y recuperación automática.
+
+---
+
+### Evidencias sugeridas (para adjuntar en entrega)
+- Salida de `docker build` (imagen construida).
+- Logs de `docker compose up` mostrando respuesta de `/internal/ping-peer`.
+- Salida de `kubectl get pods` y `kubectl get svc`.
+- Prueba de acceso a `http://localhost:30080/health` y `/swagger`.
+- Salida de `kubectl scale deployment ordenes-api --replicas=3`.
+- Captura/registro de `kubectl delete pod ...` y `kubectl get pods -w` mostrando recreación automática.
