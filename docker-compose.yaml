@@ -1,0 +1,15 @@
+services:
+  ordenes-api:
+    build: .
+    image: multiserviciosnet-api:1.0
+    container_name: ordenes-api
+    ports:
+      - "8080:8080"
+
+  ordenes-api-peer:
+    image: multiserviciosnet-api:1.0
+    container_name: ordenes-api-peer
+    environment:
+      - ASPNETCORE_URLS=http://+:8080
+    ports:
+      - "8081:8080"

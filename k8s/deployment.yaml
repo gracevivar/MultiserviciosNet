@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ordenes-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ordenes-api
+  template:
+    metadata:
+      labels:
+        app: ordenes-api
+    spec:
+      containers:
+        - name: ordenes-api
+          image: multiserviciosnet-api:1.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 3
+            periodSeconds: 5
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
