@@ -3,6 +3,9 @@
     <File Path="Dockerfile" />
   </Folder>
   <Project Path="RetoTienda.Api/RetoTienda.Api.csproj" Id="97ea850e-e9ff-41ad-aec9-041bd513b95e" />
+  <Project Path="RetoTienda.Contracts/RetoTienda.Contracts.csproj" />
+  <Project Path="RetoTienda.Gateway/RetoTienda.Gateway.csproj" />
+  <Project Path="RetoTienda.Worker/RetoTienda.Worker.csproj" />
   <Project Path="RetoTiendda.Application/RetoTienda.Application.csproj" />
   <Project Path="RetoTiendda.Domain/RetoTienda.Domain.csproj" />
   <Project Path="RetoTiendda.Infrastructure/RetoTienda.Infrastructure.csproj" />
