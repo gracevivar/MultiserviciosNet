@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/Elementos de la solución/">
+    <File Path="Dockerfile" />
+  </Folder>
   <Project Path="RetoTienda.Api/RetoTienda.Api.csproj" Id="97ea850e-e9ff-41ad-aec9-041bd513b95e" />
   <Project Path="RetoTiendda.Application/RetoTienda.Application.csproj" />
   <Project Path="RetoTiendda.Domain/RetoTienda.Domain.csproj" />

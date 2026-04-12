@@ -1,15 +1,44 @@
 services:
-  ordenes-api:
-    build: .
-    image: multiserviciosnet-api:1.0
-    container_name: ordenes-api
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
     ports:
-      - "8080:8080"
+      - "5672:5672"
+      - "15672:15672"
 
-  ordenes-api-peer:
-    image: multiserviciosnet-api:1.0
-    container_name: ordenes-api-peer
+  retotienda-api:
+    build:
+      context: .
+      dockerfile: RetoTienda.Api/Dockerfile
+    container_name: retotienda-api
     environment:
-      - ASPNETCORE_URLS=http://+:8080
+      RabbitMq__Host: rabbitmq
+      RabbitMq__User: guest
+      RabbitMq__Pass: guest
+      ASPNETCORE_URLS: http://+:8080
+    depends_on:
+      - rabbitmq
     ports:
       - "8081:8080"
+
+  retotienda-worker:
+    build:
+      context: .
+      dockerfile: RetoTienda.Worker/Dockerfile
+    container_name: retotienda-worker
+    environment:
+      RabbitMq__Host: rabbitmq
+      RabbitMq__User: guest
+      RabbitMq__Pass: guest
+    depends_on:
+      - rabbitmq
+
+  retotienda-gateway:
+    build:
+      context: .
+      dockerfile: RetoTienda.Gateway/Dockerfile
+    container_name: retotienda-gateway
+    depends_on:
+      - retotienda-api
+    ports:
+      - "8080:8080"

@@ -1,27 +1,33 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using MassTransit;
+using Microsoft.AspNetCore.Mvc;
+using RetoTienda.Contracts.Events;
 using RetoTiendda.Application.UseCases.CrearItem;
 using RetoTiendda.Application.UseCases.CrearOrden;
 using RetoTiendda.Application.UseCases.ObtenerOrden;
 using RetoTiendda.Domain.Common;
 
+
 namespace RetoTienda.Api.Controllers;
 
 [ApiController]
 [Route("api/ordenes")]
+[Route("orders")]
 public sealed class OrdenController : ControllerBase
 {
     private readonly CreateOrdenUseCase _createOrden;
     private readonly CrearOrdenItemUseCase _addItem;
     private readonly ObtenerORdenUseCase _getOrden;
+    private readonly IPublishEndpoint _publish;
 
     public OrdenController(
         CreateOrdenUseCase createOrden,
         CrearOrdenItemUseCase addItem,
-        ObtenerORdenUseCase getOrden)
+        ObtenerORdenUseCase getOrden, IPublishEndpoint publish)
     {
         _createOrden = createOrden;
         _addItem = addItem;
         _getOrden = getOrden;
+        _publish = publish;
     }
 
     [HttpPost]
@@ -30,6 +36,11 @@ public sealed class OrdenController : ControllerBase
         try
         {
             var id = await _createOrden.ExecuteAsync(new(req.ClienteId, req.Moneda), ct);
+            await _publish.Publish(new OrderCreated(
+                   OrderId: id,
+                   CustomerId: req.ClienteId,
+                   CreatedAtUtc: DateTime.UtcNow
+               ), ct);
             return CreatedAtAction(nameof(GetById), new { orderId = id }, new { ordenId = id });
         }
         catch (DomainException ex)
