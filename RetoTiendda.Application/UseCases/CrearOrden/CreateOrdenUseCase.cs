@@ -11,8 +11,8 @@ public sealed class CreateOrdenUseCase
 
     public async Task<Guid> ExecuteAsync(CreateOrdenCommand cmd, CancellationToken ct)
     {
-        var orden = OrdenFactory.CreateDraft(cmd.ClienteId, cmd.Moneda);
-        await _repo.AddAsync(orden, ct);
-        return orden.Id;
+        var order = OrdenFactory.CreateDraft(cmd.ClienteId, cmd.Moneda);
+        await _repo.AddAsync(order, ct);
+        return order.Id;
     }
 }

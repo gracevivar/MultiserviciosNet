@@ -177,3 +177,93 @@ No se incluye autenticación, UI ni patrones avanzados (fuera del alcance del re
 - Prueba de acceso a `http://localhost:30080/health` y `/swagger`.
 - Salida de `kubectl scale deployment ordenes-api --replicas=3`.
 - Captura/registro de `kubectl delete pod ...` y `kubectl get pods -w` mostrando recreación automática.
+
+
+###############################################################################################################################################################################
+###############################################################################################################################################################################
+###############################################################################################################################################################################
+
+## Reto 4 - Evolución hacia una arquitectura de microservicios
+
+###############################################################################################################################################################################
+###############################################################################################################################################################################
+###############################################################################################################################################################################
+
+### Arquitectura
+Componentes:
+- **RetoTienda.Gateway** (API Gateway con YARP)
+- **RetoTienda.Api** (Orders API: crea órdenes y publica eventos)
+- **RabbitMQ** (Message Broker)
+- **RetoTienda.Worker** (Worker Service: consume eventos)
+
+Flujo mínimo (evidenciado):
+**Cliente → Gateway → API → RabbitMQ → Worker**
+
+### Comunicación
+- **Gateway → API (HTTP)**: YARP enruta `/orders/*` hacia la API.
+- **API → Worker (Eventos)**: La API publica el evento `OrderCreated` a RabbitMQ y el Worker lo consume desde una cola.
+
+### Contratos
+- **RetoTienda.Contracts** contiene el contrato del evento:
+  - `OrderCreated(OrderId, CustomerId, CreatedAtUtc)`
+
+  ### Cómo correr (Docker Compose)
+Desde la raíz del repositorio:
+
+```bash
+docker compose up --build -d
+docker compose ps
+
+ ### Servicios expuestos:
+
+ ### Gateway: http://localhost:8080
+ ### API (directo): http://localhost:8081
+ ### RabbitMQ UI: http://localhost:15672 (user/pass: guest/guest)
+
+ ###Crear orden vía Gateway:
+
+
+Invoke-RestMethod -Method Post -Uri "http://localhost:8080/orders" -ContentType "application/json" -Body '{ "clienteId":"CUST-001", "moneda":"USD" }'
+
+ ###Verificar consumo del evento en el Worker:
+docker compose logs -f retotienda-worker
+
+---
+
+## 3) Agrega “Decisiones técnicas” (por qué usaste cada cosa)
+
+```md
+### Decisiones técnicas
+
+1. **API Gateway con YARP**
+   - Se utilizó **YARP** por ser una solución oficial/estándar en .NET para reverse proxy y gateway, basada en configuración (Routes/Clusters) y fácil de demostrar en un entorno local.
+
+2. **Mensajería con RabbitMQ**
+   - Se utilizó **RabbitMQ** como broker por ser liviano, ampliamente usado y soportar el patrón pub/sub y colas de trabajo.
+
+3. **Publicación/consumo de eventos con MassTransit**
+   - Se utilizó **MassTransit** para simplificar la integración con RabbitMQ (publicación de eventos y configuración de consumers) reduciendo boilerplate.
+
+4. **Separación de contratos**
+   - Se creó **RetoTienda.Contracts** para compartir el contrato del evento `OrderCreated` entre la API y el Worker, evitando duplicación y manteniendo tipado fuerte.
+
+   ### Trade-offs asumidos
+
+1. **Sin Outbox / Garantía de entrega**
+   - El evento `OrderCreated` se publica directamente tras crear la orden (best-effort).
+   - En producción se recomienda patrón **Outbox** para evitar pérdida de eventos ante fallos entre BD y broker.
+
+2. **Persistencia simple**
+   - La persistencia se mantiene simple (in-memory o mínima) para enfocarse en el objetivo del reto: gateway + eventos + worker.
+
+3. **Gateway básico**
+   - El Gateway se limita a enrutar rutas (sin autenticación, rate limiting, retries, etc.) por alcance del reto.
+
+4. **Observabilidad mínima**
+   - No se incluyeron métricas/tracing centralizado; la evidencia se realiza con logs del Worker y Docker Compose.
+
+   ### Evidencias
+- Captura/salida de `docker compose ps` mostrando los 4 servicios arriba.
+- Respuesta del POST al Gateway.
+- Logs del Worker consumiendo el evento `OrderCreated`.
+- (Opcional) Captura de RabbitMQ UI mostrando broker activo.

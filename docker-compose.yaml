@@ -12,6 +12,7 @@ services:
       dockerfile: RetoTienda.Api/Dockerfile
     container_name: retotienda-api
     environment:
+      ASPNETCORE_ENVIRONMENT: Development
       RabbitMq__Host: rabbitmq
       RabbitMq__User: guest
       RabbitMq__Pass: guest

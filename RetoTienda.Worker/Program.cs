@@ -1,9 +1,7 @@
 using MassTransit;
-using RetoTienda.Worker;
 using RetoTienda.Worker.Consumers;
 
 var builder = Host.CreateApplicationBuilder(args);
-//builder.Services.AddHostedService<Worker>();
 
 builder.Services.AddMassTransit(x =>
 {
@@ -21,13 +19,12 @@ builder.Services.AddMassTransit(x =>
             h.Password(pass);
         });
 
-        cfg.ReceiveEndpoint("orders-worker", e =>
+        cfg.ReceiveEndpoint("retotienda-worker", e =>
         {
             e.ConfigureConsumer<OrderCreatedConsumer>(ctx);
         });
     });
 });
-
 
 var host = builder.Build();
 host.Run();
